@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="CropVision - Next-Generation Satellite Remote Sensing & AI Agricultural Intelligence Platform for Real-Time Crop Health Monitoring.">
+    <title>Crop Monitoring | Satellite Agricultural Intelligence & Crop Health Monitoring</title>
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <a href="index.html" class="brand-logo" id="homeLogo">
+            <div class="brand-icon">🌱</div>
+            Crop<span>Monitoring </span>
+            <span class="brand-badge">AI Orbit</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="#home" class="nav-link">Home</a>
+            <a href="#simulator" class="nav-link">Multispectral Lab</a>
+            <a href="#features" class="nav-link">Capabilities</a>
+            <a href="#pipeline" class="nav-link">Pipeline</a>
+            <a href="#farms" class="nav-link">Field Presets</a>
+            <a href="dashboard.html#cropRegistrySection" class="nav-link" style="color: var(--emerald-light);">🌾 Crops &amp; Areas</a>
+            <a href="dashboard.html#calculatorSection" class="nav-link">💰 Yield &amp; ROI</a>
+        </nav>
+
+        <div class="nav-actions">
+            <button class="btn-icon" id="mobileNavToggle" title="Menu" onclick="toggleMobileNav()"
+                style="display:none;">☰</button>
+            <button class="btn-icon" id="themeToggleBtn" title="Toggle Theme" onclick="toggleAppTheme()">
+                🌓
+            </button>
+            <a href="dashboard.html" class="nav-btn" id="openDashNavBtn">
+                Launch Dashboard →
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="telemetry-badge">
+                <span class="pulse-dot"></span>
+                <span>SENTINEL-2 & LANDSAT-9 CONSTELLATION SYNC</span>
+            </div>
+
+            <h1>
+                Satellite Based <br>
+                <span>Crop Health Monitoring </span>
+            </h1>
+
+            <p>
+                Harness high-resolution multispectral satellite imagery, automated atmospheric correction, and
+                vegetation index modeling to diagnose crop vigor, detect water stress, and optimize harvest yields.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="dashboard.html" class="primary-btn" id="heroLaunchBtn">
+                    Launch Command Dashboard →
+                </a>
+                <a href="#simulator" class="secondary-btn" id="heroSimulatorBtn">
+                    🔬 Explore Multispectral Lab
+                </a>
+            </div>
+
+            <!-- Real-Time Telemetry Summary Strip -->
+            <div class="hero-telemetry-strip">
+                <div class="telemetry-item">
+                    <span class="val">10m</span>
+                    <span class="lbl">Spatial Res</span>
+                </div>
+                <div class="telemetry-item">
+                    <span class="val">5-Day</span>
+                    <span class="lbl">Orbit Revisit</span>
+                </div>
+                <div class="telemetry-item">
+                    <span class="val">13</span>
+                    <span class="lbl">Spectral Bands</span>
+                </div>
+                <div class="telemetry-item">
+                    <span class="val">98.4%</span>
+                    <span class="lbl">Index Accuracy</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero Space & Orbit Graphic -->
+        <div class="hero-visual">
+            <div class="space-scene">
+                <!-- Outer Orbit Rings -->
+                <div class="orbit-ring ring-1"></div>
+                <div class="orbit-ring ring-2"></div>
+
+                <!-- Active Radar Sweep Visual -->
+                <div class="radar-sweep"></div>
+
+                <!-- Earth Model -->
+                <div class="earth-globe"></div>
+
+                <!-- Floating Telemetry Card 1 -->
+                <div class="floating-card card-top">
+                    <div class="icon-wrap">🛰️</div>
+                    <div>
+                        <h4>Sentinel-2 MSI</h4>
+                        <p>Band 8 (NIR) & 4 (Red)</p>
+                    </div>
+                </div>
+
+                <!-- Floating Telemetry Card 2 -->
+                <div class="floating-card card-bottom">
+                    <div class="icon-wrap">🌿</div>
+                    <div>
+                        <h4>NDVI 0.82</h4>
+                        <p>Optimal Vegetative Vigor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Multispectral Simulator Section -->
+    <section class="simulator-section" id="simulator">
+        <div class="section-header">
+            <span class="section-subtitle">INTERACTIVE REMOTE SENSING LAB</span>
+            <h2 class="section-title">See Crops Through Satellite Eyes </h2>
+            <p class="section-desc">
+                Different wavelengths of light reveal invisible biological metrics. Toggle between spectral layers to
+                examine how remote sensing algorithms detect vegetative health before visible stress occurs.
+            </p>
+        </div>
+
+        <div class="simulator-box">
+            <!-- Spectrum Selection Tabs -->
+            <div class="spectrum-tabs" id="spectrumTabs">
+                <button class="spectrum-tab active" data-mode="ndvi" onclick="switchSpectrumMode('ndvi')">
+                    🌿 NDVI (Plant Vigor)
+                </button>
+                <button class="spectrum-tab" data-mode="ndwi" onclick="switchSpectrumMode('ndwi')">
+                    💧 NDWI (Water Content)
+                </button>
+                <button class="spectrum-tab" data-mode="rgb" onclick="switchSpectrumMode('rgb')">
+                    👁️ True Color (RGB)
+                </button>
+                <button class="spectrum-tab" data-mode="nir" onclick="switchSpectrumMode('nir')">
+                    📡 False Color (NIR)
+                </button>
+            </div>
+
+            <!-- Interactive Display Grid -->
+            <div class="simulator-display">
+                <div class="sim-preview-frame" id="simPreviewFrame"
+                    style="background: radial-gradient(circle at 45% 45%, #34a17d 0%, #064e3b 40%, #0f172a 90%);">
+                    <div class="sim-overlay-canvas">
+                        <div class="scan-hud">
+                            <span id="hudBand">SPECTRAL PASS: NIR + RED (10m)</span>
+                            <span id="hudConfidence">CONFIDENCE: 99.2%</span>
+                        </div>
+
+                        <div class="sim-legend" id="simLegend">
+                            <span id="legendTitle">NDVI Vegetative Scale</span>
+                            <div class="bar bar-ndvi" id="legendBar"></div>
+                            <div class="labels">
+                                <span id="legendMin">0.0 (Stressed/Soil)</span>
+                                <span id="legendMax">1.0 (Dense Vigor)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sim-details">
+                    <h3 id="simTitle">Normalized Difference Vegetation Index</h3>
+                    <p id="simDescription">
+                        NDVI quantifies vegetation by measuring the difference between near-infrared (which vegetation
+                        strongly reflects) and red light (which vegetation absorbs for photosynthesis). High values
+                        signify dense, healthy chlorophyll biomass.
+                    </p>
+
+                    <div class="sim-formula" id="simFormula">
+                        NDVI = (B8_NIR - B4_Red) / (B8_NIR + B4_Red)
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <a href="dashboard.html" class="primary-btn" style="padding: 10px 18px; font-size: 0.88rem;">
+                            Analyze Live Farm on Map →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Capabilities Grid -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <span class="section-subtitle">END-TO-END REMOTE SENSING</span>
+            <h2 class="section-title">Engineered For Precision Agronomy </h2>
+            <p class="section-desc">
+                From raw multispectral satellite data packages to actionable agronomist advisories, explore the
+                comprehensive feature suite powering modern agricultural decisions.
+            </p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">🛰️</div>
+                <h3>Orbital Data Ingestion</h3>
+                <p>Automated ingestion pipeline from ESA Sentinel-2 and USGS Landsat constellations with sub-pixel
+                    coregistration.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">☁️</div>
+                <h3>Cloud & Shadow Masking</h3>
+                <p>Scene Classification Layer (SCL) filters cirrus clouds, haze, and terrain shadows to guarantee clean
+                    pixel analysis.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">🌿</div>
+                <h3>Multi-Index Suite</h3>
+                <p>Real-time calculation of NDVI, NDWI, SAVI, and EVI to map biomass density, moisture stress, and soil
+                    background corrections.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">📊</div>
+                <h3>Zoned Stress Detection</h3>
+                <p>Pixel-level spatial clustering separates fields into management zones (Healthy, Moderate, Stressed)
+                    with precise GPS coordinates.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">💧</div>
+                <h3>Evapotranspiration & Water</h3>
+                <p>Integrates satellite canopy reflectance with microclimate meteorological data to estimate daily crop
+                    water loss.</p>
+            </div>
+
+            <div class="feature-card reveal">
+                <div class="feature-icon-box">📈</div>
+                <h3>Historical Trend Tracking</h3>
+                <p>Chronological time-series graphs trace crop development curves across planting, tillering, heading,
+                    and ripening stages.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Processing Pipeline -->
+    <section class="workflow-section" id="pipeline">
+        <div class="section-header">
+            <span class="section-subtitle">ARCHITECTURE & WORKFLOW</span>
+            <h2 class="section-title">How Crop Monitoring Processes Data </h2>
+            <p class="section-desc">
+                Continuous satellite telemetry pipeline transforms raw planetary observations into farm-level decision
+                intelligence.
+            </p>
+        </div>
+
+        <div class="workflow-track">
+            <div class="workflow-node">
+                <span class="node-step">01</span>
+                <div class="node-icon">🛰️</div>
+                <h4>Satellite Pass</h4>
+                <p>Sentinel-2 Multispectral capture at 10-20m resolution</p>
+            </div>
+
+            <div class="workflow-arrow">→</div>
+
+            <div class="workflow-node">
+                <span class="node-step">02</span>
+                <div class="node-icon">📡</div>
+                <h4>Radiometric Prep</h4>
+                <p>Top-of-Atmosphere (TOA) to Bottom-of-Atmosphere (BOA)</p>
+            </div>
+
+            <div class="workflow-arrow">→</div>
+
+            <div class="workflow-node">
+                <span class="node-step">03</span>
+                <div class="node-icon">☁️</div>
+                <h4>Cloud Masking</h4>
+                <p>SCL filtering of atmospheric interference & aerosols</p>
+            </div>
+
+            <div class="workflow-arrow">→</div>
+
+            <div class="workflow-node">
+                <span class="node-step">04</span>
+                <div class="node-icon">🌿</div>
+                <h4>Spectral Indices</h4>
+                <p>NDVI, NDWI, and canopy chlorophyll calculations</p>
+            </div>
+
+            <div class="workflow-arrow">→</div>
+
+            <div class="workflow-node">
+                <span class="node-step">05</span>
+                <div class="node-icon">🧠</div>
+                <h4>Health Modeling</h4>
+                <p>Spatial zoning & AI agronomist recommendations</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Farm Presets Preview Section -->
+    <section class="features-section" id="farms" style="padding-top: 60px;">
+        <div class="section-header">
+            <span class="section-subtitle">ACTIVE FIELD SITES</span>
+            <h2 class="section-title">Explore Monitored Agricultural Fields </h2>
+            <p class="section-desc">
+                Select a field below to immediately inspect live satellite indices, boundary polygons, and historical
+                trends inside the dashboard.
+            </p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card" style="cursor: pointer;" onclick="launchFarm('farm1')">
+                <div class="feature-icon-box">🌾</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                    <h3>Farm 01 - Greater Noida</h3>
+                    <span class="meta-pill" style="color: var(--emerald-light);">NDVI: 0.82</span>
+                </div>
+                <p>Crop: Sharbati Wheat | 48.5 Hectares. Healthy canopy growth with high vegetative vigor across Sector
+                    A & B.</p>
+                <div style="margin-top: 18px; color: var(--emerald-light); font-weight: 600; font-size: 0.85rem;">
+                    Inspect Farm on Dashboard →
+                </div>
+            </div>
+
+            <div class="feature-card" style="cursor: pointer;" onclick="launchFarm('farm2')">
+                <div class="feature-icon-box">🌱</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                    <h3>Farm 02 - Delhi NCR</h3>
+                    <span class="meta-pill" style="color: var(--emerald-light);">NDVI: 0.61</span>
+                </div>
+                <p>Crop: Mustard & Legumes | 32.0 Hectares. Moderate vegetative vigor. Western sector indicates slight
+                    irrigation need.</p>
+                <div style="margin-top: 18px; color: var(--emerald-light); font-weight: 600; font-size: 0.85rem;">
+                    Inspect Farm on Dashboard →
+                </div>
+            </div>
+
+            <div class="feature-card" style="cursor: pointer;" onclick="launchFarm('farm3')">
+                <div class="feature-icon-box">🌾</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                    <h3>Farm 03 - Punjab</h3>
+                    <span class="meta-pill" style="color: var(--emerald-light);">NDVI: 0.78</span>
+                </div>
+                <p>Crop: Basmati Rice & Grain | 65.2 Hectares. Saturated moisture levels with steady heading stage
+                    biomass buildup.</p>
+                <div style="margin-top: 18px; color: var(--emerald-light); font-weight: 600; font-size: 0.85rem;">
+                    Inspect Farm on Dashboard →
+                </div>
+            </div>
+
+            <div class="feature-card" style="cursor: pointer;" onclick="launchFarm('farm4')">
+                <div class="feature-icon-box">🍇</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                    <h3>Farm 04 - Nashik</h3>
+                    <span class="meta-pill" style="color: var(--emerald-light);">NDVI: 0.71</span>
+                </div>
+                <p>Crop: Table Grapes & Pomegranate | 24.8 Hectares. Uniform trellis canopy and balanced
+                    micro-irrigation.</p>
+                <div style="margin-top: 18px; color: var(--emerald-light); font-weight: 600; font-size: 0.85rem;">
+                    Inspect Farm on Dashboard →
+                </div>
+            </div>
+
+            <div class="feature-card"
+                style="cursor: pointer; border: 2px dashed rgba(235, 236, 236, 0.4); background: rgba(16, 185, 129, 0.05);"
+                onclick="openAddOnDashboard()">
+                <div class="feature-icon-box">🌱</div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                    <h3>+ Add New Field Site</h3>
+                    <span class="meta-pill" style="color: var(--satellite-cyan);">Custom Site</span>
+                </div>
+                <p>Provision your own agricultural field parcel by specifying area coordinates, crop variety, and
+                    acreage.</p>
+                <div style="margin-top: 18px; color: var(--emerald-light); font-weight: 700; font-size: 0.85rem;">
+                    Open Field Provisioner →
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 35px;">
+            <a href="dashboard.html#cropRegistrySection" class="secondary-btn"
+                style="padding: 12px 26px; font-size: 0.92rem;">
+                🌾 Explore Regional Crops & Areas Catalog →
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="brand-logo">
+                <div class="brand-icon">🌱</div>
+                Crop<span>Monitoring</span>
+                <span class="brand-badge">Space Intelligence</span>
+            </div>
+
+            <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap;">
+                <a href="#home" class="nav-link">Top</a>
+                <a href="#simulator" class="nav-link">Simulator</a>
+                <a href="#features" class="nav-link">Capabilities</a>
+                <a href="dashboard.html" class="nav-btn" style="padding: 8px 18px;">Open Dashboard →</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2026 Crop Health Satellite Monitoring . Advanced Remote Sensing Project.</span>
+            <span>Sentinel-2 L2A BOA Co-registration Pipeline</span>
+        </div>
+    </footer>
+
+    <!-- Interactive Script for Landing Page -->
+    <script>
+        // Multispectral Simulator interactive state
+        const spectrumData = {
+            ndvi: {
+                title: "Normalized Difference Vegetation Index (NDVI)",
+                description: "NDVI quantifies photosynthetic activity by calculating the ratio between NIR reflection (plant cell structure) and Red absorption (chlorophyll). Values range from 0.2 (soil) to 0.9 (lush canopy).",
+                formula: "NDVI = (Band 8 [NIR] - Band 4 [Red]) / (Band 8 + Band 4)",
+                hudBand: "SPECTRAL PASS: NIR + RED (10m Resolution)",
+                hudConfidence: "INDEX ACCURACY: 99.4%",
+                legendTitle: "NDVI Vigor Scale",
+                barClass: "bar-ndvi",
+                legendMin: "0.0 (Bare Soil / Stressed)",
+                legendMax: "1.0 (Dense Vigor)",
+                bgGradient: "radial-gradient(circle at 45% 45%, #10b981 0%, #059669 35%, #064e3b 65%, #0a1b11 95%)"
+            },
+            ndwi: {
+                title: "Normalized Difference Water Index (NDWI)",
+                description: "NDWI detects canopy water content and liquid surface water by combining Near-Infrared and Short-Wave Infrared (SWIR). Essential for spotting drought stress days before leaves visually wilt.",
+                formula: "NDWI = (Band 8 [NIR] - Band 11 [SWIR]) / (Band 8 + Band 11)",
+                hudBand: "SPECTRAL PASS: NIR + SWIR (20m Resolution)",
+                hudConfidence: "WATER CONTENT INDEX: 98.1%",
+                legendTitle: "NDWI Moisture Scale",
+                barClass: "bar-ndwi",
+                legendMin: "-0.5 (Water Deficit)",
+                legendMax: "+0.6 (Saturated Canopy)",
+                bgGradient: "radial-gradient(circle at 50% 50%, #38bdf8 0%, #0284c7 35%, #1e3a8a 70%, #081226 95%)"
+            },
+            rgb: {
+                title: "True Color Visual Composition (RGB)",
+                description: "True Color reflects the natural human visual spectrum combining Red (Band 4), Green (Band 3), and Blue (Band 2). Useful for cloud visual identification, field boundary validation, and real optical inspection.",
+                formula: "RGB = Band 4 (Red) + Band 3 (Green) + Band 2 (Blue)",
+                hudBand: "SPECTRAL PASS: B4 + B3 + B2 (RGB True Color)",
+                hudConfidence: "RADIOMETRIC SURFACE REFLECTANCE",
+                legendTitle: "Optical Reflection Scale",
+                barClass: "bar-rgb",
+                legendMin: "Dark Surface / Water",
+                legendMax: "High Solar Albedo",
+                bgGradient: "radial-gradient(circle at 45% 45%, #4ade80 0%, #22c55e 30%, #15803d 60%, #1c1917 95%)"
+            },
+            nir: {
+                title: "False Color Infrared (Color Infrared CIR)",
+                description: "False color substitutes Near-Infrared into the Red channel. Because healthy plants reflect massive amounts of NIR, vigorous crops display bright vivid crimson-red, making weed infestation and crop borders starkly visible.",
+                formula: "CIR = Band 8 (NIR) as Red + Band 4 (Red) as Green + Band 3 (Green) as Blue",
+                hudBand: "SPECTRAL PASS: B8 (NIR) False Color CIR",
+                hudConfidence: "CHLOROPHYLL REFLECTANCE ENHANCED",
+                legendTitle: "Infrared Plant Biomass Scale",
+                barClass: "bar-nir",
+                legendMin: "Urban / Water (Cyan)",
+                legendMax: "Vigorous Biomass (Crimson Red)",
+                bgGradient: "radial-gradient(circle at 45% 45%, #f43f5e 0%, #e11d48 35%, #881337 70%, #180309 95%)"
+            }
+        };
+
+        function switchSpectrumMode(mode) {
+            const data = spectrumData[mode];
+            if (!data) return;
+
+            // Highlight active tab
+            document.querySelectorAll('.spectrum-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+            });
+
+            // Update content
+            document.getElementById('simTitle').innerText = data.title;
+            document.getElementById('simDescription').innerText = data.description;
+            document.getElementById('simFormula').innerText = data.formula;
+            document.getElementById('hudBand').innerText = data.hudBand;
+            document.getElementById('hudConfidence').innerText = data.hudConfidence;
+            document.getElementById('legendTitle').innerText = data.legendTitle;
+            document.getElementById('legendMin').innerText = data.legendMin;
+            document.getElementById('legendMax').innerText = data.legendMax;
+
+            const bar = document.getElementById('legendBar');
+            bar.className = 'bar ' + data.barClass;
+
+            const frame = document.getElementById('simPreviewFrame');
+            frame.style.background = data.bgGradient;
+        }
+
+        function launchFarm(farmId) {
+            sessionStorage.setItem('selected_farm', farmId);
+            window.location.href = 'dashboard.html';
+        }
+
+        function openAddOnDashboard() {
+            sessionStorage.setItem('open_add_field_modal', 'true');
+            window.location.href = 'dashboard.html';
+        }
+
+        function toggleAppTheme() {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('cropvision_theme', isLight ? 'light' : 'dark');
+        }
+
+        // Restore saved theme
+        if (localStorage.getItem('cropvision_theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+
+        // Scroll-reveal for feature cards
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, i) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // Mobile nav toggle
+        function toggleMobileNav() {
+            document.querySelector('.nav-links').classList.toggle('open');
+        }
+
+        // Show mobile toggle at small viewport
+        function checkMobileNav() {
+            const btn = document.getElementById('mobileNavToggle');
+            if (btn) btn.style.display = window.innerWidth <= 768 ? 'flex' : 'none';
+        }
+        checkMobileNav();
+        window.addEventListener('resize', checkMobileNav);
+    </script>
+</body>
+
+</html>

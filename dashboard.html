@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Monitoring | Precision Agriculture Satellite Command Center</title>
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet GIS CSS with Fallback -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+
+<body class="dashboard-layout">
+
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="dash-sidebar" id="dashSidebar">
+        <div class="sidebar-brand">
+            <a href="index.html" class="brand-logo">
+                <div class="brand-icon">🌱</div>
+                Crop<span>Monitoring</span>
+    
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="index.html" class="sidebar-link">
+                <span class="icon">🏠</span>
+                <span>Home Page</span>
+            </a>
+            <a href="dashboard.html" class="sidebar-link active">
+                <span class="icon">📊</span>
+                <span>Command Center</span>
+            </a>
+            <a href="#mapSection" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">🗺️</span>
+                <span>Satellite Map</span>
+            </a>
+            <a href="#healthSection" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">🌿</span>
+                <span>Crop Health</span>
+            </a>
+            <a href="#trendSection" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">📈</span>
+                <span>NDVI Analytics</span>
+            </a>
+            <a href="#cropRegistrySection" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">🌾</span>
+                <span>Crop &amp; Area Registry</span>
+            </a>
+            <a href="#calculatorSection" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">💰</span>
+                <span>Yield &amp; ROI Calculator</span>
+            </a>
+            <a href="javascript:void(0)" class="sidebar-link" onclick="toggleCropBot(); closeSidebar();">
+                <span class="icon">🤖</span>
+                <span>AI CropBot</span>
+            </a>
+            <a href="#satelliteMeta" class="sidebar-link" onclick="closeSidebar()">
+                <span class="icon">🛰️</span>
+                <span>Orbital Specs</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="system-health-box">
+                <div class="health-dot"></div>
+                <div class="health-status-text">
+                    <strong id="apiStatusText">Sentinel-2 Sync: LIVE</strong>
+                    <small id="backendStatus">Active Engine</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Dashboard Area -->
+    <main class="dash-main">
+
+        <!-- Top Command Bar -->
+        <header class="dash-topbar">
+            <div class="dash-heading">
+                <button class="sidebar-mobile-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()"
+                    title="Toggle Navigation">☰</button>
+                <div>
+                    <h1>Crop Health &amp; Satellite Telemetry</h1>
+                    <p>Real-time ESA Sentinel-2 &amp; USGS Landsat Multispectral Processing Suite</p>
+                </div>
+            </div>
+
+            <div class="dash-actions">
+                <button class="btn-icon" id="themeToggleBtn" title="Toggle Theme" onclick="toggleAppTheme()">
+                    🌓
+                </button>
+                <button class="secondary-btn" id="openAddCropBtn" onclick="openAddCropModal()">
+                    🌾 + Add Crop
+                </button>
+                <button class="primary-btn" id="openAddFieldBtn" onclick="openAddFieldModal()">
+                    🌱 + Add Field
+                </button>
+                <button class="secondary-btn" id="exportReportBtn" onclick="openReportModal()">
+                    📥 Export Report
+                </button>
+                <button class="primary-btn" id="refreshBtn" onclick="refreshDashboard()">
+                    ↻ Sync Pass
+                </button>
+            </div>
+        </header>
+
+        <!-- Farm Selector Control Ribbon -->
+        <section class="farm-control-strip">
+            <div class="farm-picker-group">
+                <label for="farmSelect">
+                    <span>📍</span> Select Target Farm
+                </label>
+                <select id="farmSelect" class="styled-select">
+                </select>
+
+                <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.78rem;"
+                    onclick="openAddFieldModal()" title="Add another agricultural field to this project">
+                    + Add Field
+                </button>
+
+                <button class="delete-farm-btn" id="deleteFarmBtn" style="display:none;" onclick="deleteSelectedFarm()"
+                    title="Delete this custom field site">
+                    🗑️ Delete Field
+                </button>
+
+                <div class="farm-meta-tags">
+                    <span class="meta-pill">Crop: <strong id="farmCropType">Sharbati Wheat</strong></span>
+                    <span class="meta-pill">Area: <strong id="farmArea">48.5 Ha</strong></span>
+                    <span class="meta-pill">Stage: <strong id="farmStage">Tillering / Heading</strong></span>
+                </div>
+            </div>
+
+            <div class="satellite-sync-pill">
+                <span>🛰️ Last Orbital Observation:</span>
+                <span class="sync-time" id="lastUpdate">Loading pass...</span>
+            </div>
+        </section>
+
+        <!-- Telemetry KPI Metrics Grid -->
+        <section class="kpi-grid">
+            <!-- NDVI Card -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Vegetation Index (NDVI)</span>
+                    <div class="kpi-badge badge-green">🌿</div>
+                </div>
+                <div class="kpi-value-row">
+                    <div class="kpi-value" id="ndviValue">--</div>
+                    <span class="kpi-delta delta-pos" id="ndviDelta">+0.05 vs last pass</span>
+                </div>
+                <div class="kpi-caption">Photosynthetic biomass & canopy vigor</div>
+            </div>
+
+            <!-- NDWI Card -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Water Index (NDWI)</span>
+                    <div class="kpi-badge badge-cyan">💧</div>
+                </div>
+                <div class="kpi-value-row">
+                    <div class="kpi-value" id="ndwiValue">--</div>
+                    <span class="kpi-delta delta-pos" id="ndwiStatus">Optimal Moisture</span>
+                </div>
+                <div class="kpi-caption">Internal leaf moisture & water stress</div>
+            </div>
+
+            <!-- SAVI / Soil Adjusted Card -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Soil-Adjusted Index (SAVI)</span>
+                    <div class="kpi-badge badge-amber">🌾</div>
+                </div>
+                <div class="kpi-value-row">
+                    <div class="kpi-value" id="saviValue">0.71</div>
+                    <span class="kpi-delta delta-pos" id="saviStatus">High Density</span>
+                </div>
+                <div class="kpi-caption">Soil-brightness background corrected</div>
+            </div>
+
+            <!-- Microclimate & ET Card -->
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Field Weather & ET</span>
+                    <div class="kpi-badge badge-purple">⛅</div>
+                </div>
+                <div class="kpi-value-row">
+                    <div class="kpi-value" id="tempValue">28.4°C</div>
+                    <span class="kpi-delta delta-pos" id="moistureValue">Soil 34%</span>
+                </div>
+                <div class="kpi-caption" id="etValue">Daily ET: 4.2 mm/day | Wind: 8 km/h</div>
+                <div class="kpi-sub-strip">
+                    <span class="spray-pill badge-safe" id="sprayBadge">🟢 Safe Spray Window</span>
+                    <span class="live-weather-tag" id="liveWeatherTag" title="Live weather telemetry via Open-Meteo">● Open-Meteo Live</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Center Section: Interactive Satellite GIS Map & Health Overview -->
+        <section class="dash-center-grid" id="mapSection">
+
+            <!-- Interactive Leaflet Map Panel -->
+            <div class="dash-panel map-panel">
+                <div class="panel-title-bar">
+                    <h3><span>🛰️</span> High-Resolution Farm Satellite View</h3>
+
+                    <div class="map-header-actions">
+                        <button class="map-layer-btn active" id="btnLayerSat"
+                            onclick="setMapBaseLayer('satellite')">Satellite</button>
+                        <button class="map-layer-btn" id="btnLayerStreet"
+                            onclick="setMapBaseLayer('street')">Topo</button>
+                        <button class="map-layer-btn active" id="btnLayerNDVI" onclick="toggleNDVIOverlay()">NDVI
+                            Heatmap</button>
+                        <button class="map-layer-btn active" id="btnLayerBoundary"
+                            onclick="toggleFarmBoundary()">Boundary</button>
+                        <button class="map-layer-btn" id="btnSwipeCompare" onclick="toggleSwipeCompare()"
+                            title="Drag slider to compare Satellite vs NDVI Heatmap">🌓 Compare Swipe</button>
+                        <button class="map-layer-btn" id="btnDrawBoundary" onclick="toggleDrawBoundary()"
+                            title="Click on map to trace custom field perimeter">✏️ Draw Field</button>
+                    </div>
+                </div>
+
+                <div class="map-container-wrap" id="mapContainerWrap">
+                    <!-- Interactive Drawing Mode Banner -->
+                    <div class="map-draw-banner" id="mapDrawBanner" style="display: none;">
+                        <div class="draw-banner-info">
+                            <span class="pulse-dot"></span>
+                            <span>Click points on map to plot field boundary vertices.</span>
+                            <strong id="drawAreaBadge" class="draw-area-badge">0 points (0.00 Ha)</strong>
+                        </div>
+                        <div class="draw-actions">
+                            <button class="secondary-btn btn--xs" type="button" onclick="finishDrawnBoundary()">✓ Finish &amp; Use</button>
+                            <button class="secondary-btn btn--xs" type="button" onclick="cancelDrawBoundary()">✕ Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Swipe Comparison Slider Line & Handle -->
+                    <div class="map-swipe-divider" id="mapSwipeDivider" style="display: none;">
+                        <div class="map-swipe-handle" id="mapSwipeHandle" title="Drag to compare Satellite vs NDVI">
+                            <span>◀ 🛰️ | 🌿 ▶</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating Search Bar on Map -->
+                    <div class="map-floating-bar">
+                        <input type="text" id="mapSearchInput" class="map-search-input"
+                            placeholder="🔍 Search field, city, coordinates..."
+                            onkeydown="if(event.key==='Enter') searchLocation()">
+                        <button class="btn-icon" style="height: 35px; width: 35px;" onclick="searchLocation()"
+                            title="Search">↵</button>
+                    </div>
+
+                    <!-- GIS Map Canvas -->
+                    <div id="map"></div>
+
+                    <!-- NDVI Legend Scale Overlay -->
+                    <div class="map-legend-overlay">
+                        <strong style="color: var(--text-main); font-size: 0.75rem;">NDVI Spectral Scale</strong>
+                        <div class="map-legend-bar"></div>
+                        <div
+                            style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.68rem;">
+                            <span>0.0 Stressed</span>
+                            <span>0.5 Mod</span>
+                            <span>1.0 Vigor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="map-footer-info">
+                    <span>💡 Tip: Click anywhere on the map to sample coordinates & run spectral diagnosis</span>
+                    <span class="coord-display" id="coordinates">Coordinates: 28.47440, 77.50400</span>
+                </div>
+            </div>
+
+            <!-- Crop Health & Agronomy Analysis Panel -->
+            <div class="dash-panel health-overview-panel" id="healthSection">
+                <div class="panel-title-bar">
+                    <h3><span>🌿</span> Crop Health Score</h3>
+                    <span class="meta-pill" id="observationDate">12 Sep 2026</span>
+                </div>
+
+                <!-- Circular SVG Radial Gauge -->
+                <div class="health-gauge-center">
+                    <div class="radial-gauge-wrap">
+                        <svg class="radial-svg" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#10b981" />
+                                    <stop offset="100%" stop-color="#34d399" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="radial-bg" cx="80" cy="80" r="70"></circle>
+                            <circle class="radial-progress" id="gaugeCircle" cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="gauge-center-text">
+                            <div class="score" id="healthScore">84</div>
+                            <div class="unit">Vigor Score / 100</div>
+                        </div>
+                    </div>
+
+                    <div class="health-status-badge status-healthy" id="healthBadge">
+                        ● Healthy Crops
+                    </div>
+                </div>
+
+                <!-- Sub-Metric Progress Bars -->
+                <div class="health-submetrics">
+                    <div class="submetric-row">
+                        <div class="submetric-header">
+                            <span>Chlorophyll Pigment Absorption</span>
+                            <strong id="submetricChlorophyll">88%</strong>
+                        </div>
+                        <div class="submetric-track">
+                            <div class="submetric-fill fill-emerald" id="fillChlorophyll" style="width: 88%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="submetric-row">
+                        <div class="submetric-header">
+                            <span>Canopy Water Saturation</span>
+                            <strong id="submetricWater">74%</strong>
+                        </div>
+                        <div class="submetric-track">
+                            <div class="submetric-fill fill-cyan" id="fillWater" style="width: 74%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="submetric-row">
+                        <div class="submetric-header">
+                            <span>Nitrogen Uptake Efficiency</span>
+                            <strong id="submetricNitrogen">82%</strong>
+                        </div>
+                        <div class="submetric-track">
+                            <div class="submetric-fill fill-emerald" id="fillNitrogen" style="width: 82%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Agronomist Action Items -->
+                <div class="agronomist-advice-box">
+                    <div class="advice-icon">💡</div>
+                    <div class="advice-content">
+                        <h5 id="healthTitle">Crop Condition: Healthy</h5>
+                        <p id="healthText">Vegetation exhibits strong photosynthetic vigor and dense canopy development.
+                            No immediate water deficit detected.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Historical Time-Series Chart & Satellite Pipeline Row -->
+        <section class="chart-panel-row" id="trendSection">
+
+            <!-- Chart.js Trend Panel -->
+            <div class="dash-panel">
+                <div class="panel-title-bar">
+                    <div>
+                        <h3><span>📈</span> Historical Spectral Index Trajectory</h3>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">NDVI Biomass vs NDWI
+                            Moisture trend over consecutive satellite revisits</p>
+                    </div>
+
+                    <div class="timeframe-toggles">
+                        <button class="time-btn active" onclick="setTimeframe(3, this)">3 Months</button>
+                        <button class="time-btn" onclick="setTimeframe(6, this)">6 Months</button>
+                        <button class="time-btn" onclick="setTimeframe(12, this)">1 Year</button>
+                    </div>
+                </div>
+
+                <div class="chart-container-box">
+                    <canvas id="ndviChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Satellite Metadata & Processing Pipeline Panel -->
+            <div class="dash-panel" id="satelliteMeta">
+                <div class="panel-title-bar">
+                    <h3><span>🛰️</span> Orbital Mission Specs</h3>
+                </div>
+
+                <div class="meta-summary-list">
+                    <div class="meta-summary-item">
+                        <span class="label">🛰️ Spacecraft</span>
+                        <span class="val">Sentinel-2B (ESA)</span>
+                    </div>
+                    <div class="meta-summary-item">
+                        <span class="label">📡 Instrument</span>
+                        <span class="val">MSI (13 Bands)</span>
+                    </div>
+                    <div class="meta-summary-item">
+                        <span class="label">📐 Ground Resolution</span>
+                        <span class="val">10.0m / pixel</span>
+                    </div>
+                    <div class="meta-summary-item">
+                        <span class="label">☁️ Cloud Cover</span>
+                        <span class="val" id="cloudCoverVal">0.8% (Clean)</span>
+                    </div>
+                    <div class="meta-summary-item">
+                        <span class="label">☀️ Sun Elevation</span>
+                        <span class="val">58.4° Azimuth</span>
+                    </div>
+                    <div class="meta-summary-item">
+                        <span class="label">⚙️ Processing Level</span>
+                        <span class="val">Level-2A (BOA Reflectance)</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Crop & Regional Agricultural Registry Explorer -->
+        <section class="crop-registry-panel" id="cropRegistrySection">
+            <div class="panel-title-bar" style="border-bottom: none; margin-bottom: 0;">
+                <div>
+                    <span class="meta-pill"
+                        style="color: var(--emerald-light); font-size: 0.72rem; text-transform: uppercase;">Regional
+                        Agronomy Catalog</span>
+                    <h2 style="font-size: 1.35rem; margin-top: 4px;"><span>🌾</span> Crops & Areas Directory</h2>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        Search and filter agricultural crops cultivated across monitored geographic areas in this
+                        project
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="secondary-btn" style="padding: 8px 14px; font-size: 0.82rem;"
+                        onclick="openAddCropModal()">
+                        🌾 + Add Crop Variety
+                    </button>
+                    <button class="primary-btn" style="padding: 8px 14px; font-size: 0.82rem;"
+                        onclick="openAddFieldModal()">
+                        🌱 + Add Field Site
+                    </button>
+                </div>
+            </div>
+
+            <!-- Regional Area Filter Strip (Pills) -->
+            <div style="margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">
+                        Filter by Geographic Area / Region:
+                    </span>
+                    <span id="registryAreaCount" style="font-size: 0.72rem; color: var(--emerald-light);">4 Areas
+                        Active</span>
+                </div>
+                <div class="area-filter-strip" id="areaFilterStrip">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Search and Filter Toolbar -->
+            <div class="registry-toolbar">
+                <div class="registry-search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="cropSearchInput" placeholder="Search crops by name, category, or area..."
+                        oninput="filterCropRegistry()">
+                </div>
+
+                <div class="registry-filters">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label for="cropCategoryFilter"
+                            style="font-size: 0.78rem; color: var(--text-muted);">Category:</label>
+                        <select id="cropCategoryFilter" class="styled-select"
+                            style="padding: 8px 12px; font-size: 0.82rem;" onchange="filterCropRegistry()">
+                            <option value="all">All Categories</option>
+                            <option value="Cereal">Cereals & Grains</option>
+                            <option value="Oilseed">Oilseeds</option>
+                            <option value="Cash Crop">Cash Crops</option>
+                            <option value="Horticulture">Horticulture & Fruits</option>
+                            <option value="Pulses">Pulses & Legumes</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <label for="cropSortBy" style="font-size: 0.78rem; color: var(--text-muted);">Sort By:</label>
+                        <select id="cropSortBy" class="styled-select" style="padding: 8px 12px; font-size: 0.82rem;"
+                            onchange="filterCropRegistry()">
+                            <option value="name">Crop Name</option>
+                            <option value="area">Area Acreage</option>
+                            <option value="ndvi">NDVI Vigor</option>
+                        </select>
+                    </div>
+
+                    <button class="secondary-btn" style="padding: 8px 12px; font-size: 0.8rem;"
+                        onclick="resetCropFilters()" title="Reset Filters">
+                        ↺ Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Area Summary Metrics Strip -->
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
+                <div
+                    style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Total Filtered
+                        Area</span>
+                    <strong id="statTotalAcreage" style="font-size: 1.15rem; color: var(--emerald-light);">170.5
+                        Ha</strong>
+                </div>
+                <div
+                    style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Active Crops In
+                        Area</span>
+                    <strong id="statCropCount" style="font-size: 1.15rem; color: var(--text-main);">4 Varieties</strong>
+                </div>
+                <div
+                    style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Monitored Farms /
+                        Sites</span>
+                    <strong id="statFarmCount" style="font-size: 1.15rem; color: var(--satellite-cyan);">4
+                        Sites</strong>
+                </div>
+                <div
+                    style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block;">Peak Area Health</span>
+                    <strong id="statAvgNDVI" style="font-size: 1.15rem; color: var(--emerald-light);">0.82 NDVI</strong>
+                </div>
+            </div>
+
+            <!-- Crop Cards Grid -->
+            <div class="crop-grid" id="cropGrid">
+                <!-- Injected via renderCropRegistry() in app.js -->
+            </div>
+        </section>
+
+        <!-- Yield & Harvest ROI Calculator Section -->
+        <section class="crop-registry-panel roi-calculator-panel" id="calculatorSection">
+            <div class="panel-title-bar" style="border-bottom:none; margin-bottom:0;">
+                <div>
+                    <span class="registry-label">Precision Agronomy Modeling</span>
+                    <h2 class="registry-title"><span>💰</span> Yield &amp; Harvest Revenue Calculator</h2>
+                    <p class="registry-desc">Predict harvest yield, mandi market revenue, and precision fertilizer savings calibrated against real-time satellite NDVI biomass</p>
+                </div>
+                <button class="secondary-btn btn--sm" type="button" onclick="syncCalculatorWithCurrentFarm()" title="Load active farm parameters into calculator">↻ Sync With Active Farm</button>
+            </div>
+
+            <div class="roi-calc-container">
+                <div class="roi-calc-inputs">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="calcCropSelect">🌾 Target Crop Variety</label>
+                            <select id="calcCropSelect" class="styled-select" onchange="runHarvestROICalculation()">
+                                <option value="Wheat" data-base-yield="42" data-price="2275">Sharbati Wheat (₹2,275/qtl)</option>
+                                <option value="Mustard" data-base-yield="22" data-price="5650">Yellow Mustard (₹5,650/qtl)</option>
+                                <option value="Basmati" data-base-yield="48" data-price="4200">Basmati Rice (₹4,200/qtl)</option>
+                                <option value="Grapes" data-base-yield="95" data-price="6500">Table Grapes (₹6,500/qtl)</option>
+                                <option value="Cotton" data-base-yield="24" data-price="7020">Bt-Cotton (₹7,020/qtl)</option>
+                                <option value="Sugarcane" data-base-yield="380" data-price="315">Sugarcane (₹315/qtl)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="calcFieldArea">📐 Field Acreage (Hectares)</label>
+                            <input type="number" id="calcFieldArea" class="styled-input" value="48.5" step="0.5" min="0.1" oninput="runHarvestROICalculation()">
+                        </div>
+                        <div class="form-group">
+                            <label for="calcIrrigation">💧 Irrigation Method</label>
+                            <select id="calcIrrigation" class="styled-select" onchange="runHarvestROICalculation()">
+                                <option value="drip">Micro-Drip (High Efficiency +12%)</option>
+                                <option value="sprinkler">Sprinkler System (+6%)</option>
+                                <option value="canal">Canal / Surface Flood (Standard)</option>
+                                <option value="rainfed">Rainfed / Dryland (-10%)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="calcMarketPrice">🏷️ Market Price (₹ / Quintal)</label>
+                            <input type="number" id="calcMarketPrice" class="styled-input" value="2275" step="50" oninput="runHarvestROICalculation()">
+                        </div>
+                        <div class="form-group col-span-2">
+                            <label for="calcNDVISlider">
+                                <span>🌿 Observed / Target NDVI Biomass Index:</span>
+                                <strong id="calcNDVIVal" class="ndvi-preview-val">0.82</strong>
+                            </label>
+                            <input type="range" id="calcNDVISlider" min="0.30" max="0.95" step="0.01" value="0.82" class="styled-range" oninput="document.getElementById('calcNDVIVal').innerText = parseFloat(this.value).toFixed(2); runHarvestROICalculation();">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                <span>0.30 (Severe Stress -35%)</span>
+                                <span>0.65 (Baseline Standard)</span>
+                                <span>0.95 (Peak Vigor +22%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roi-calc-results">
+                    <div class="roi-metric-card highlight-green">
+                        <div class="roi-metric-header">
+                            <span>🌾 Projected Harvest Yield</span>
+                            <span class="roi-tag" id="calcYieldEfficiencyTag">+15% vs Avg</span>
+                        </div>
+                        <div class="roi-metric-val" id="calcProjectedYield">2,037 <small>Quintals</small></div>
+                        <div class="roi-metric-sub" id="calcYieldPerHa">42.0 Quintals / Hectare (~203.7 Tonnes total)</div>
+                    </div>
+
+                    <div class="roi-metric-card highlight-cyan">
+                        <div class="roi-metric-header">
+                            <span>💰 Estimated Gross Mandi Revenue</span>
+                            <span class="roi-tag">MSP / Market</span>
+                        </div>
+                        <div class="roi-metric-val" id="calcGrossRevenue">₹46,34,175</div>
+                        <div class="roi-metric-sub" id="calcRevenuePerHa">~₹95,550 / Hectare</div>
+                    </div>
+
+                    <div class="roi-metric-card highlight-cyan">
+                        <div class="roi-metric-header">
+                            <span>🧪 Satellite Precision NPK Savings</span>
+                            <span class="roi-tag">VRT Variable Rate</span>
+                        </div>
+                        <div class="roi-metric-val" id="calcFertilizerSavings">₹1,84,300</div>
+                        <div class="roi-metric-sub" id="calcUreaSaved">~1,455 kg Urea &amp; DAP saved by zone mapping</div>
+                    </div>
+
+                    <div class="roi-metric-card highlight-purple">
+                        <div class="roi-metric-header">
+                            <span>💧 Optimized Water Requirement</span>
+                            <span class="roi-tag" id="calcWaterTag">Efficient Drip</span>
+                        </div>
+                        <div class="roi-metric-val" id="calcWaterReq">1,94,000 <small>m³</small></div>
+                        <div class="roi-metric-sub" id="calcWaterSavings">~22% water conserved vs flood irrigation</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Agronomy Report Export Modal -->
+    <div class="modal-overlay" id="reportModal" onclick="handleModalBackdropClick(event, 'reportModal')">
+        <div class="modal-card">
+            <button class="modal-close-btn" onclick="closeReportModal()">✕</button>
+
+            <div class="report-header">
+                <div class="brand-logo" style="margin-bottom: 8px;">
+                    <div class="brand-icon">🌱</div>
+                    Crop<span>Monitoring</span>
+                    <span class="brand-badge">Agronomy Report</span>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted);">Official Satellite Remote Sensing & Crop Health
+                    Assessment Certificate</p>
+            </div>
+
+            <div id="reportContent">
+                <table class="report-table">
+                    <tr>
+                        <th>Target Field</th>
+                        <td id="repFarmName">Farm 01 - Greater Noida</td>
+                    </tr>
+                    <tr>
+                        <th>Coordinates</th>
+                        <td id="repCoords">28.47440° N, 77.50400° E</td>
+                    </tr>
+                    <tr>
+                        <th>Observation Date</th>
+                        <td id="repDate"></td>
+                    </tr>
+                    <tr>
+                        <th>Crop Variety</th>
+                        <td id="repCrop">Sharbati Wheat (Tillering Stage)</td>
+                    </tr>
+                    <tr>
+                        <th>Field Size</th>
+                        <td id="repArea">48.5 Hectares</td>
+                    </tr>
+                    <tr>
+                        <th>NDVI Index</th>
+                        <td id="repNDVI">0.82 (High Biomass)</td>
+                    </tr>
+                    <tr>
+                        <th>NDWI Moisture</th>
+                        <td id="repNDWI">0.34 (Well Hydrated)</td>
+                    </tr>
+                    <tr>
+                        <th>Overall Health Score</th>
+                        <td id="repScore">84 / 100 (Optimal)</td>
+                    </tr>
+                    <tr>
+                        <th>Agronomist Recommendation</th>
+                        <td id="repAdvice">Vegetation exhibits strong photosynthetic vigor and dense canopy development.
+                            Continue scheduled irrigation regimen.</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px;">
+                <button class="secondary-btn" onclick="closeReportModal()">Close</button>
+                <button class="primary-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Field Modal -->
+    <div class="modal-overlay" id="addFieldModal" onclick="handleModalBackdropClick(event, 'addFieldModal')">
+        <div class="modal-card" style="max-width: 640px;">
+            <button class="modal-close-btn" onclick="closeAddFieldModal()">✕</button>
+
+            <div class="report-header">
+                <div class="brand-logo" style="margin-bottom: 8px;">
+                    <div class="brand-icon">🌱</div>
+                    Crop<span>Vision</span>
+                    <span class="brand-badge">Field Provisioning</span>
+                </div>
+                <h3 style="margin-bottom: 4px;">Add New Agricultural Field Site</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted);">
+                    Register a new monitored field parcel with geographic area coordinates and crop telemetry.
+                </p>
+            </div>
+
+            <form id="addFieldForm" onsubmit="handleFieldFormSubmit(event)">
+                <div class="form-grid">
+                    <div class="form-group col-span-2">
+                        <label for="newFieldName">📍 Field / Farm Name *</label>
+                        <input type="text" id="newFieldName" class="styled-input"
+                            placeholder="e.g. Farm 05 - Karnal Agri Hub" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldAreaLocation">🌍 Geographic Area / Region *</label>
+                        <input type="text" id="newFieldAreaLocation" class="styled-input"
+                            placeholder="e.g. Karnal, Haryana" required list="areaSuggestions">
+                        <datalist id="areaSuggestions">
+                            <option value="Greater Noida, Uttar Pradesh">
+                            <option value="IARI Pusa Belt, Delhi">
+                            <option value="Ludhiana Agri Zone, Punjab">
+                            <option value="Dindori Agri Valley, Nashik">
+                            <option value="Karnal Agro Belt, Haryana">
+                            <option value="Pune Agri Valley, Maharashtra">
+                        </datalist>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldSize">📐 Field Area Size *</label>
+                        <div class="input-with-action">
+                            <input type="number" step="0.1" id="newFieldSize" class="styled-input" placeholder="45.0"
+                                required>
+                            <select id="newFieldUnit" class="styled-select" style="width: 110px;">
+                                <option value="Hectares">Hectares</option>
+                                <option value="Acres">Acres</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldCrop">🌾 Crop Variety *</label>
+                        <select id="newFieldCrop" class="styled-select" required>
+                            <!-- Populated dynamically from CROPS_DATABASE -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldStage">🌱 Crop Growth Stage</label>
+                        <select id="newFieldStage" class="styled-select">
+                            <option value="Tillering / Heading">Tillering / Heading</option>
+                            <option value="Vegetative Maturation">Vegetative Maturation</option>
+                            <option value="Siliqua Formation">Siliqua Formation</option>
+                            <option value="Germination & Emergence">Germination & Emergence</option>
+                            <option value="Flowering / Pollination">Flowering / Pollination</option>
+                            <option value="Grain Filling / Ripening">Grain Filling / Ripening</option>
+                            <option value="Harvest Ready">Harvest Ready</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label for="newFieldSowingDate">📅 Sowing / Plantation Date</label>
+                        <input type="date" id="newFieldSowingDate" class="styled-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldLat">🌐 Latitude (Center) *</label>
+                        <input type="number" step="0.00001" id="newFieldLat" class="styled-input" placeholder="28.47440"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newFieldLng">🌐 Longitude (Center) *</label>
+                        <input type="number" step="0.00001" id="newFieldLng" class="styled-input" placeholder="77.50400"
+                            required>
+                    </div>
+
+                    <div class="form-group col-span-2"
+                        style="background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 10px 14px;">
+                        <span
+                            style="font-size: 0.76rem; color: var(--emerald-light); font-weight: 600; display: block; margin-bottom: 6px;">Coordinate
+                            Auto-Fill Helpers:</span>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="secondary-btn" style="padding: 5px 10px; font-size: 0.76rem;"
+                                onclick="fillWithLastMapClick()">
+                                📍 Use Last Map Coordinate
+                            </button>
+                            <button type="button" class="secondary-btn" style="padding: 5px 10px; font-size: 0.76rem;"
+                                onclick="geocodeAreaLocation()">
+                                🔍 Geocode From Area Name
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label for="newFieldNDVI">
+                            <span>🌿 Target / Estimated NDVI:</span>
+                            <strong id="ndviPreviewVal" style="color: var(--emerald-light);">0.80</strong>
+                        </label>
+                        <input type="range" id="newFieldNDVI" min="0.20" max="0.95" step="0.01" value="0.80"
+                            class="styled-range"
+                            oninput="document.getElementById('ndviPreviewVal').innerText = parseFloat(this.value).toFixed(2)">
+                    </div>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid var(--border-subtle); padding-top: 18px;">
+                    <button type="button" class="secondary-btn" onclick="closeAddFieldModal()">Cancel</button>
+                    <button type="submit" class="primary-btn">🌱 Add & Plot Field Site</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Crop Modal -->
+    <div class="modal-overlay" id="addCropModal" onclick="handleModalBackdropClick(event, 'addCropModal')">
+        <div class="modal-card" style="max-width: 600px;">
+            <button class="modal-close-btn" onclick="closeAddCropModal()">✕</button>
+
+            <div class="report-header">
+                <div class="brand-logo" style="margin-bottom: 8px;">
+                    <div class="brand-icon">🌾</div>
+                    Crop<span>Vision</span>
+                    <span class="brand-badge">Species Catalog</span>
+                </div>
+                <h3 style="margin-bottom: 4px;">Register New Crop Variety</h3>
+                <p style="font-size: 0.82rem; color: var(--text-muted);">
+                    Add an agricultural crop to the catalog and map it to suitable regional growth areas.
+                </p>
+            </div>
+
+            <form id="addCropForm" onsubmit="handleCropFormSubmit(event)">
+                <div class="form-grid">
+                    <div class="form-group col-span-2">
+                        <label for="newCropName">🌾 Crop Variety Name *</label>
+                        <input type="text" id="newCropName" class="styled-input" placeholder="e.g. Bt-Cotton (Hybrid-9)"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newCropCategory">🏷️ Crop Category *</label>
+                        <select id="newCropCategory" class="styled-select" required>
+                            <option value="Cereal">Cereal / Grain</option>
+                            <option value="Oilseed">Oilseed</option>
+                            <option value="Cash Crop">Cash Crop</option>
+                            <option value="Horticulture">Horticulture & Fruit</option>
+                            <option value="Pulses">Pulses & Legumes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newCropSeason">☀️ Growing Season</label>
+                        <select id="newCropSeason" class="styled-select">
+                            <option value="Rabi (Winter)">Rabi (Winter: Nov - Apr)</option>
+                            <option value="Kharif (Monsoon)">Kharif (Monsoon: Jun - Oct)</option>
+                            <option value="Zaid (Summer)">Zaid (Summer: Mar - Jun)</option>
+                            <option value="Perennial / All Season">Perennial / All Season</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label for="newCropAreas">📍 Suitable Geographic Area(s) *</label>
+                        <input type="text" id="newCropAreas" class="styled-input"
+                            placeholder="e.g. Punjab, Haryana, Uttar Pradesh" required>
+                        <span class="form-hint">Separate multiple areas or regions with commas</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newCropWater">💧 Water Requirement</label>
+                        <select id="newCropWater" class="styled-select">
+                            <option value="Medium">Medium (350 - 500 mm)</option>
+                            <option value="Low">Low (Drought Tolerant)</option>
+                            <option value="High">High (600 - 900 mm)</option>
+                            <option value="Saturated">Saturated / Flooded (Paddy)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newCropDuration">⏳ Days to Maturation</label>
+                        <input type="text" id="newCropDuration" class="styled-input" placeholder="e.g. 120 - 135 Days">
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label for="newCropNDVIRange">🌿 Optimal NDVI Target Vigor</label>
+                        <input type="text" id="newCropNDVIRange" class="styled-input" placeholder="e.g. 0.75 - 0.88">
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label for="newCropNotes">💡 Agronomic Management Guidance</label>
+                        <textarea id="newCropNotes" class="styled-textarea"
+                            placeholder="Guidance on nutrition, soil moisture, or disease vulnerability..."></textarea>
+                    </div>
+                </div>
+
+                <div
+                    style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; border-top: 1px solid var(--border-subtle); padding-top: 18px;">
+                    <button type="button" class="secondary-btn" onclick="closeAddCropModal()">Cancel</button>
+                    <button type="submit" class="primary-btn">🌾 Register Crop Variety</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="agriToast" class="agri-toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMsg">Operation successful</span>
+    </div>
+
+    <!-- CropBot AI Agronomist Floating Launcher & Interactive Drawer -->
+    <button class="cropbot-launcher" id="cropBotLauncher" onclick="toggleCropBot()" title="Chat with CropBot AI Agronomist">
+        <span class="cropbot-icon">🤖</span>
+        <span class="cropbot-label">CropBot AI</span>
+        <span class="cropbot-pulse"></span>
+    </button>
+
+    <div class="cropbot-drawer" id="cropBotDrawer" style="display: none;">
+        <div class="cropbot-header">
+            <div class="cropbot-header-title">
+                <div class="cropbot-avatar">🌱</div>
+                <div>
+                    <h4>CropBot AI Agronomist</h4>
+                    <p id="cropBotContextText">Context: Farm 01 • Sharbati Wheat (NDVI 0.82)</p>
+                </div>
+            </div>
+            <button class="cropbot-close-btn" type="button" onclick="toggleCropBot()" title="Close Assistant">✕</button>
+        </div>
+        <div class="cropbot-body" id="cropBotMessages">
+            <div class="cropbot-msg bot-msg">
+                <strong>👋 Welcome to CropVision Agronomy AI</strong>
+                <p>I monitor your real-time Sentinel-2 multispectral indices, weather telemetry, and soil condition. Ask me anything about crop vigor, fertilizer NPK dosage, spraying conditions, or irrigation schedules.</p>
+            </div>
+        </div>
+        <div class="cropbot-chips" id="cropBotChips">
+            <button class="cropbot-chip" type="button" onclick="askCropBotPrompt('Explain my current NDVI score and canopy health')">🌿 Explain NDVI</button>
+            <button class="cropbot-chip" type="button" onclick="askCropBotPrompt('What fertilizer or NPK dosage is recommended now?')">🧪 Fertilizer Advice</button>
+            <button class="cropbot-chip" type="button" onclick="askCropBotPrompt('When should I schedule the next irrigation cycle?')">💧 Irrigation Timing</button>
+            <button class="cropbot-chip" type="button" onclick="askCropBotPrompt('Is it safe to spray pesticides or foliar nutrition today?')">🌦️ Spray Window</button>
+        </div>
+        <form class="cropbot-input-row" onsubmit="handleCropBotSubmit(event)">
+            <input type="text" id="cropBotInput" placeholder="Ask CropBot anything about your crops..." autocomplete="off">
+            <button type="submit" class="primary-btn btn--sm">Send ↵</button>
+        </form>
+    </div>
+
+    <!-- Leaflet GIS JS with Fallback -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        if (typeof L === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"><\/script>');
+        }
+    </script>
+
+    <!-- Chart.js with Fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>');
+        }
+    </script>
+
+    <!-- Main Application Logic -->
+    <script src="app.js"></script>
+
+</body>
+
+</html>
